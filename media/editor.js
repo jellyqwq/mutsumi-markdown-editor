@@ -6,6 +6,7 @@
   let suppressChange = false;
   let updateTimer;
   let themeObserver;
+  let themeStyleElement;
   const pendingImages = new Map();
 
   window.addEventListener("message", (event) => {
@@ -76,6 +77,7 @@
       },
       after() {
         applyEditorTheme();
+        ensureToolbarIconFallback();
         watchThemeChanges();
         queueImageResolution();
       },
@@ -102,11 +104,18 @@
   }
 
   function applyEditorTheme() {
+    injectThemePatch();
+    ensureToolbarIconFallback();
+
     if (!editor || typeof editor.setTheme !== "function") {
       return;
     }
 
     editor.setTheme(getVditorTheme());
+    window.setTimeout(() => {
+      injectThemePatch();
+      ensureToolbarIconFallback();
+    }, 0);
   }
 
   function getVditorTheme() {
@@ -115,6 +124,91 @@
     }
 
     return "classic";
+  }
+
+  function injectThemePatch() {
+    if (!themeStyleElement) {
+      themeStyleElement = document.createElement("style");
+      themeStyleElement.id = "mutsumi-theme-patch";
+      document.head.appendChild(themeStyleElement);
+    }
+
+    const isDark = document.body.classList.contains("vscode-dark") || document.body.classList.contains("vscode-high-contrast");
+    const icon = isDark ? "#d4d4d4" : "#4b5563";
+    const iconHover = isDark ? "#ffffff" : "#0969da";
+    const editorBg = readCssVariable("--vscode-editor-background", isDark ? "#1e1e1e" : "#ffffff");
+    const editorFg = readCssVariable("--vscode-editor-foreground", isDark ? "#d4d4d4" : "#24292f");
+    const toolbarBg = readCssVariable("--vscode-editorGroupHeader-tabsBackground", editorBg);
+    const border = readCssVariable("--vscode-panel-border", isDark ? "#3c3c3c" : "#d0d7de");
+
+    themeStyleElement.textContent = `
+      body .vditor {
+        --border-color: ${border} !important;
+        --toolbar-background-color: ${toolbarBg} !important;
+        --toolbar-icon-color: ${icon} !important;
+        --toolbar-icon-hover-color: ${iconHover} !important;
+        --textarea-background-color: ${editorBg} !important;
+        --textarea-text-color: ${editorFg} !important;
+        background: ${editorBg} !important;
+        color: ${editorFg} !important;
+      }
+      body .vditor-toolbar {
+        background: ${toolbarBg} !important;
+        border-bottom-color: ${border} !important;
+      }
+      body .vditor-toolbar__item .vditor-tooltipped,
+      body .vditor-icon {
+        color: ${icon} !important;
+        opacity: 1 !important;
+      }
+      body .vditor-toolbar__item .vditor-tooltipped:hover,
+      body .vditor-toolbar__item .vditor-tooltipped:focus,
+      body .vditor-toolbar__item .vditor-tooltipped:active,
+      body .vditor-icon:hover,
+      body .vditor-icon--current,
+      body .vditor-menu--current {
+        color: ${iconHover} !important;
+      }
+      body .vditor-toolbar__item svg,
+      body .vditor-toolbar__item svg *,
+      body .vditor-toolbar__item svg use,
+      body .vditor-toolbar__item svg path,
+      body .vditor-icon svg,
+      body .vditor-icon svg *,
+      body .vditor-icon svg use,
+      body .vditor-icon svg path {
+        color: inherit !important;
+        fill: currentColor !important;
+        stroke: currentColor !important;
+        opacity: 1 !important;
+        visibility: visible !important;
+      }
+      body .vditor-content,
+      body .vditor-wysiwyg,
+      body .vditor-ir,
+      body .vditor-sv,
+      body .vditor-preview,
+      body .vditor-reset,
+      body .vditor-textarea {
+        background: ${editorBg} !important;
+        color: ${editorFg} !important;
+      }
+    `;
+  }
+
+  function readCssVariable(name, fallback) {
+    return getComputedStyle(document.body).getPropertyValue(name).trim() || fallback;
+  }
+
+  function ensureToolbarIconFallback() {
+    const apply = () => {
+      const hasVditorSymbols = Boolean(document.getElementById("vditor-icon-undo"));
+      document.body.classList.toggle("mutsumi-icon-fallback", !hasVditorSymbols);
+    };
+
+    apply();
+    window.setTimeout(apply, 100);
+    window.setTimeout(apply, 500);
   }
 
   function saveImages(files) {

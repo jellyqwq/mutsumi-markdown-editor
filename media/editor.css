@@ -33,43 +33,67 @@ body {
 }
 
 .vditor {
-  --border-color: var(--vscode-panel-border);
-  --second-color: var(--vscode-descriptionForeground);
-  --panel-background-color: var(--vscode-dropdown-background);
+  --mutsumi-toolbar-bg: var(--vscode-editorGroupHeader-tabsBackground, var(--vscode-editor-background, #ffffff));
+  --mutsumi-toolbar-icon: #4b5563;
+  --mutsumi-toolbar-icon-hover: #0969da;
+  --mutsumi-editor-bg: var(--vscode-editor-background, #ffffff);
+  --mutsumi-editor-fg: var(--vscode-editor-foreground, #24292f);
+  --mutsumi-border: var(--vscode-panel-border, #d0d7de);
+  --mutsumi-panel-bg: var(--vscode-dropdown-background, var(--vscode-editorWidget-background, #ffffff));
+
+  --border-color: var(--mutsumi-border);
+  --second-color: var(--vscode-descriptionForeground, #6e7781);
+  --panel-background-color: var(--mutsumi-panel-bg);
   --panel-shadow: 0 6px 18px rgba(0, 0, 0, 0.18);
-  --toolbar-background-color: var(--vscode-editorGroupHeader-tabsBackground);
-  --toolbar-icon-color: var(--vscode-icon-foreground);
-  --toolbar-icon-hover-color: var(--vscode-textLink-foreground);
-  --textarea-background-color: var(--vscode-editor-background);
-  --textarea-text-color: var(--vscode-editor-foreground);
-  --count-background-color: var(--vscode-editorWidget-background);
-  --heading-border-color: var(--vscode-panel-border);
-  --blockquote-color: var(--vscode-descriptionForeground);
+  --toolbar-background-color: var(--mutsumi-toolbar-bg);
+  --toolbar-icon-color: var(--mutsumi-toolbar-icon);
+  --toolbar-icon-hover-color: var(--mutsumi-toolbar-icon-hover);
+  --textarea-background-color: var(--mutsumi-editor-bg);
+  --textarea-text-color: var(--mutsumi-editor-fg);
+  --count-background-color: var(--vscode-editorWidget-background, rgba(127, 127, 127, 0.12));
+  --heading-border-color: var(--mutsumi-border);
+  --blockquote-color: var(--vscode-descriptionForeground, #6e7781);
 
   height: 100% !important;
   border: 0 !important;
   border-radius: 0 !important;
-  background: var(--vscode-editor-background);
-  color: var(--vscode-editor-foreground);
+  background: var(--mutsumi-editor-bg);
+  color: var(--mutsumi-editor-fg);
 }
 
 body.vscode-light .vditor {
+  --mutsumi-toolbar-icon: #4b5563;
+  --mutsumi-toolbar-icon-hover: #0969da;
   --panel-shadow: 0 6px 18px rgba(0, 0, 0, 0.14);
 }
 
 body.vscode-dark .vditor,
 body.vscode-high-contrast .vditor {
+  --mutsumi-toolbar-bg: var(--vscode-editorGroupHeader-tabsBackground, var(--vscode-editor-background, #1f1f1f));
+  --mutsumi-toolbar-icon: #d4d4d4;
+  --mutsumi-toolbar-icon-hover: #ffffff;
+  --mutsumi-editor-bg: var(--vscode-editor-background, #1e1e1e);
+  --mutsumi-editor-fg: var(--vscode-editor-foreground, #d4d4d4);
+  --mutsumi-border: var(--vscode-panel-border, #3c3c3c);
+  --mutsumi-panel-bg: var(--vscode-dropdown-background, var(--vscode-editorWidget-background, #252526));
   --panel-shadow: 0 8px 22px rgba(0, 0, 0, 0.38);
 }
 
 .vditor-toolbar {
-  border-bottom-color: var(--vscode-panel-border) !important;
-  background: var(--vscode-editorGroupHeader-tabsBackground) !important;
+  border-bottom-color: var(--mutsumi-border) !important;
+  background: var(--mutsumi-toolbar-bg) !important;
 }
 
 .vditor-toolbar__item .vditor-tooltipped,
 .vditor-icon {
-  color: var(--vscode-icon-foreground) !important;
+  color: var(--mutsumi-toolbar-icon) !important;
+}
+
+body.vscode-dark .vditor-toolbar__item .vditor-tooltipped,
+body.vscode-dark .vditor-icon,
+body.vscode-high-contrast .vditor-toolbar__item .vditor-tooltipped,
+body.vscode-high-contrast .vditor-icon {
+  color: #d4d4d4 !important;
 }
 
 .vditor-toolbar__item .vditor-tooltipped:hover,
@@ -78,18 +102,25 @@ body.vscode-high-contrast .vditor {
 .vditor-icon:hover,
 .vditor-icon--current,
 .vditor-menu--current {
-  color: var(--vscode-textLink-foreground) !important;
-  background: var(--vscode-toolbar-hoverBackground, transparent) !important;
+  color: var(--mutsumi-toolbar-icon-hover) !important;
+  background: var(--vscode-toolbar-hoverBackground, rgba(127, 127, 127, 0.14)) !important;
 }
 
 .vditor-toolbar__item svg,
-.vditor-icon svg {
+.vditor-toolbar__item svg *,
+.vditor-toolbar__item svg use,
+.vditor-toolbar__item svg path,
+.vditor-icon svg,
+.vditor-icon svg *,
+.vditor-icon svg use,
+.vditor-icon svg path {
+  color: inherit !important;
   fill: currentColor !important;
   stroke: currentColor !important;
 }
 
 .vditor-toolbar__divider {
-  border-left-color: var(--vscode-panel-border) !important;
+  border-left-color: var(--mutsumi-border) !important;
 }
 
 .vditor-content,
@@ -99,8 +130,8 @@ body.vscode-high-contrast .vditor {
 .vditor-preview,
 .vditor-reset,
 .vditor-textarea {
-  background: var(--vscode-editor-background) !important;
-  color: var(--vscode-editor-foreground) !important;
+  background: var(--mutsumi-editor-bg) !important;
+  color: var(--mutsumi-editor-fg) !important;
 }
 
 .vditor-wysiwyg {
@@ -111,12 +142,12 @@ body.vscode-high-contrast .vditor {
 
 .vditor-wysiwyg *,
 .vditor-reset {
-  border-color: var(--vscode-panel-border);
+  border-color: var(--mutsumi-border);
 }
 
 .vditor-wysiwyg a,
 .vditor-reset a {
-  color: var(--vscode-textLink-foreground);
+  color: var(--vscode-textLink-foreground, #0969da);
 }
 
 .vditor-wysiwyg h1,
@@ -131,41 +162,41 @@ body.vscode-high-contrast .vditor {
 .vditor-reset h4,
 .vditor-reset h5,
 .vditor-reset h6 {
-  color: var(--vscode-editor-foreground);
-  border-bottom-color: var(--vscode-panel-border);
+  color: var(--mutsumi-editor-fg);
+  border-bottom-color: var(--mutsumi-border);
 }
 
 .vditor-wysiwyg blockquote,
 .vditor-reset blockquote {
-  color: var(--vscode-descriptionForeground);
-  border-left-color: var(--vscode-textBlockQuote-border);
-  background: var(--vscode-textBlockQuote-background);
+  color: var(--vscode-descriptionForeground, #6e7781);
+  border-left-color: var(--vscode-textBlockQuote-border, var(--mutsumi-border));
+  background: var(--vscode-textBlockQuote-background, rgba(127, 127, 127, 0.08));
 }
 
 .vditor-wysiwyg code,
 .vditor-wysiwyg pre,
 .vditor-reset code,
 .vditor-reset pre {
-  color: var(--vscode-textPreformat-foreground);
-  background: var(--vscode-textCodeBlock-background);
+  color: var(--vscode-textPreformat-foreground, var(--mutsumi-editor-fg));
+  background: var(--vscode-textCodeBlock-background, rgba(127, 127, 127, 0.12));
 }
 
 .vditor-wysiwyg table tr,
 .vditor-reset table tr {
-  background: var(--vscode-editor-background);
-  border-top-color: var(--vscode-panel-border);
+  background: var(--mutsumi-editor-bg);
+  border-top-color: var(--mutsumi-border);
 }
 
 .vditor-wysiwyg table tr:nth-child(2n),
 .vditor-reset table tr:nth-child(2n) {
-  background: var(--vscode-editorWidget-background);
+  background: var(--vscode-editorWidget-background, rgba(127, 127, 127, 0.08));
 }
 
 .vditor-wysiwyg table th,
 .vditor-wysiwyg table td,
 .vditor-reset table th,
 .vditor-reset table td {
-  border-color: var(--vscode-panel-border);
+  border-color: var(--mutsumi-border);
 }
 
 .vditor-wysiwyg img {
@@ -177,17 +208,125 @@ body.vscode-high-contrast .vditor {
 .vditor-hint,
 .vditor-wysiwyg__preview,
 .vditor-tip {
-  color: var(--vscode-editor-foreground) !important;
-  background: var(--vscode-dropdown-background) !important;
-  border-color: var(--vscode-panel-border) !important;
+  color: var(--mutsumi-editor-fg) !important;
+  background: var(--mutsumi-panel-bg) !important;
+  border-color: var(--mutsumi-border) !important;
 }
 
 .vditor-hint button {
-  color: var(--vscode-editor-foreground) !important;
+  color: var(--mutsumi-editor-fg) !important;
 }
 
 .vditor-hint--current,
 .vditor-hint button:not(.vditor-menu--disabled):hover {
-  color: var(--vscode-list-hoverForeground) !important;
-  background: var(--vscode-list-hoverBackground) !important;
+  color: var(--vscode-list-hoverForeground, var(--mutsumi-editor-fg)) !important;
+  background: var(--vscode-list-hoverBackground, rgba(127, 127, 127, 0.14)) !important;
+}
+
+body.mutsumi-icon-fallback .vditor-toolbar__item .vditor-tooltipped {
+  display: inline-flex !important;
+  align-items: center;
+  justify-content: center;
+  font-size: 0 !important;
+  font-weight: 700;
+  line-height: 1;
+}
+
+body.mutsumi-icon-fallback .vditor-toolbar__item .vditor-tooltipped svg {
+  display: none !important;
+}
+
+body.mutsumi-icon-fallback .vditor-toolbar__item .vditor-tooltipped::before {
+  display: block;
+  color: currentColor;
+  font-size: 14px;
+}
+
+body.mutsumi-icon-fallback .vditor-toolbar__item [data-type="headings"]::before {
+  content: "H";
+}
+
+body.mutsumi-icon-fallback .vditor-toolbar__item [data-type="bold"]::before {
+  content: "B";
+}
+
+body.mutsumi-icon-fallback .vditor-toolbar__item [data-type="italic"]::before {
+  content: "I";
+  font-style: italic;
+}
+
+body.mutsumi-icon-fallback .vditor-toolbar__item [data-type="strike"]::before {
+  content: "S";
+  text-decoration: line-through;
+}
+
+body.mutsumi-icon-fallback .vditor-toolbar__item [data-type="link"]::before {
+  content: "@";
+}
+
+body.mutsumi-icon-fallback .vditor-toolbar__item [data-type="list"]::before {
+  content: "-";
+}
+
+body.mutsumi-icon-fallback .vditor-toolbar__item [data-type="ordered-list"]::before {
+  content: "1.";
+  font-size: 12px;
+}
+
+body.mutsumi-icon-fallback .vditor-toolbar__item [data-type="check"]::before {
+  content: "✓";
+}
+
+body.mutsumi-icon-fallback .vditor-toolbar__item [data-type="quote"]::before {
+  content: ">";
+}
+
+body.mutsumi-icon-fallback .vditor-toolbar__item [data-type="line"]::before {
+  content: "—";
+}
+
+body.mutsumi-icon-fallback .vditor-toolbar__item [data-type="code"]::before,
+body.mutsumi-icon-fallback .vditor-toolbar__item [data-type="inline-code"]::before {
+  content: "<>";
+  font-size: 12px;
+}
+
+body.mutsumi-icon-fallback .vditor-toolbar__item [data-type="upload"]::before {
+  content: "+";
+}
+
+body.mutsumi-icon-fallback .vditor-toolbar__item [data-type="table"]::before {
+  content: "#";
+}
+
+body.mutsumi-icon-fallback .vditor-toolbar__item [data-type="undo"]::before {
+  content: "↶";
+  font-size: 18px;
+}
+
+body.mutsumi-icon-fallback .vditor-toolbar__item [data-type="redo"]::before {
+  content: "↷";
+  font-size: 18px;
+}
+
+body.mutsumi-icon-fallback .vditor-toolbar__item [data-type="edit-mode"]::before {
+  content: "E";
+}
+
+body.mutsumi-icon-fallback .vditor-toolbar__item [data-type="both"]::before {
+  content: "||";
+}
+
+body.mutsumi-icon-fallback .vditor-toolbar__item [data-type="preview"]::before {
+  content: "P";
+}
+
+body.mutsumi-icon-fallback .vditor-toolbar__item [data-type="fullscreen"]::before {
+  content: "[]";
+  font-size: 12px;
+}
+
+body.mutsumi-icon-fallback .vditor-toolbar__item [data-type="more"]::before {
+  content: "...";
+  font-size: 12px;
 }

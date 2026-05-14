@@ -196,6 +196,7 @@ export class MutsumiMarkdownEditorProvider implements vscode.CustomTextEditorPro
     const nonce = getNonce();
     const vditorCssUri = webview.asWebviewUri(vscode.Uri.joinPath(this.context.extensionUri, "node_modules", "vditor", "dist", "index.css"));
     const vditorJsUri = webview.asWebviewUri(vscode.Uri.joinPath(this.context.extensionUri, "node_modules", "vditor", "dist", "index.min.js"));
+    const vditorIconUri = webview.asWebviewUri(vscode.Uri.joinPath(this.context.extensionUri, "node_modules", "vditor", "dist", "js", "icons", "ant.js"));
     const editorCssUri = webview.asWebviewUri(vscode.Uri.joinPath(this.context.extensionUri, "media", "editor.css"));
     const editorJsUri = webview.asWebviewUri(vscode.Uri.joinPath(this.context.extensionUri, "media", "editor.js"));
 
@@ -220,6 +221,7 @@ export class MutsumiMarkdownEditorProvider implements vscode.CustomTextEditorPro
   <main id="app">
     <div id="editor"></div>
   </main>
+  <script id="vditorIconScript" nonce="${nonce}" src="${vditorIconUri}"></script>
   <script nonce="${nonce}" src="${vditorJsUri}"></script>
   <script nonce="${nonce}" src="${editorJsUri}"></script>
 </body>
