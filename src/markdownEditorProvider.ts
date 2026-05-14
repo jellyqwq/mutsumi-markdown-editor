@@ -18,6 +18,8 @@ type ImageSaveResult = {
   alt: string;
 };
 
+type ImageTemplateValues = Record<string, string>;
+
 export class MutsumiMarkdownEditorProvider implements vscode.CustomTextEditorProvider {
   public static readonly viewType = "mutsumi.markdownEditor";
 
@@ -167,23 +169,48 @@ export class MutsumiMarkdownEditorProvider implements vscode.CustomTextEditorPro
     const imageRoot = normalizeRelativePath(config.get("imageRoot", "images"));
     const contentRoot = normalizeRelativePath(config.get("contentRoot", "src"));
     const imageNameTemplate = config.get("imageName", "${timestamp}.${ext}");
+    const imagePathTemplate = config.get("imagePathTemplate", "").trim();
+    const markdownImagePathTemplate = config.get("markdownImagePathTemplate", "").trim();
 
+    const timestamp = String(Date.now());
     const articlePath = articleImagePath(document, workspacePath, contentRoot);
+    const articleInfo = articlePathInfo(document, workspacePath, contentRoot);
     const imageName = renderImageName(imageNameTemplate, {
       ext,
       originalName: message.name,
-      fileName: path.posix.basename(articlePath),
+      fileName: articleInfo.fileName,
+      timestamp,
     });
-
     const publicDirPath = path.join(workspacePath, publicDir);
-    const imageRelativePath = path.posix.join(imageRoot, articlePath, imageName);
-    const targetPath = path.join(publicDirPath, ...imageRelativePath.split("/"));
+    const templateValues = imageTemplateValues({
+      workspacePath,
+      publicDir,
+      imageRoot,
+      contentRoot,
+      articlePath,
+      articleInfo,
+      imageName,
+      timestamp,
+      ext,
+      originalName: message.name,
+    });
+    const renderedImagePath = imagePathTemplate
+      ? normalizeTemplatePath(renderTemplate(imagePathTemplate, templateValues))
+      : path.posix.join(publicDir, imageRoot, articlePath, imageName);
+    const targetPath = resolveWorkspacePath(workspacePath, renderedImagePath);
 
     await fs.mkdir(path.dirname(targetPath), { recursive: true });
     await fs.writeFile(targetPath, parsedDataUrl.buffer);
 
+    const link = markdownImagePathTemplate
+      ? normalizeMarkdownLink(renderTemplate(markdownImagePathTemplate, {
+        ...templateValues,
+        imagePath: renderedImagePath,
+      }))
+      : markdownLinkForTarget(targetPath, document.uri.fsPath, publicDirPath);
+
     return {
-      link: `/${imageRelativePath}`,
+      link,
       alt: path.parse(message.name || imageName).name || "image",
     };
   }
@@ -235,11 +262,24 @@ function wholeDocumentRange(document: vscode.TextDocument): vscode.Range {
 }
 
 function articleImagePath(document: vscode.TextDocument, workspacePath: string, contentRoot: string): string {
-  const relativeDocumentPath = toPosixPath(path.relative(workspacePath, document.uri.fsPath));
-  const withoutContentRoot = stripPathPrefix(relativeDocumentPath, contentRoot);
-  const parsed = path.posix.parse(withoutContentRoot);
+  const info = articlePathInfo(document, workspacePath, contentRoot);
+  return info.relativePath;
+}
 
-  return path.posix.join(parsed.dir, parsed.name);
+function articlePathInfo(document: vscode.TextDocument, workspacePath: string, contentRoot: string) {
+  const workspaceRelativeDocumentPath = toPosixPath(path.relative(workspacePath, document.uri.fsPath));
+  const contentRelativeDocumentPath = stripPathPrefix(workspaceRelativeDocumentPath, contentRoot);
+  const parsed = path.posix.parse(contentRelativeDocumentPath);
+  const relativeDir = parsed.dir;
+  const fileName = parsed.name;
+
+  return {
+    workspaceRelativeDocumentPath,
+    contentRelativeDocumentPath,
+    relativeDir,
+    fileName,
+    relativePath: path.posix.join(relativeDir, fileName),
+  };
 }
 
 function stripPathPrefix(filePath: string, prefix: string): string {
@@ -258,18 +298,77 @@ function stripPathPrefix(filePath: string, prefix: string): string {
   return filePath;
 }
 
-function renderImageName(template: string, values: { ext: string; originalName?: string; fileName: string }): string {
-  const timestamp = String(Date.now());
+function imageTemplateValues(values: {
+  workspacePath: string;
+  publicDir: string;
+  imageRoot: string;
+  contentRoot: string;
+  articlePath: string;
+  articleInfo: ReturnType<typeof articlePathInfo>;
+  imageName: string;
+  timestamp: string;
+  ext: string;
+  originalName?: string;
+}): ImageTemplateValues {
   const originalName = values.originalName ? path.parse(values.originalName).name : "image";
 
-  return sanitizeFileName(
-    template
-      .replace(/\$\{timestamp\}/g, timestamp)
-      .replace(/\$\{now\}/g, timestamp)
-      .replace(/\$\{fileName\}/g, values.fileName)
-      .replace(/\$\{originalName\}/g, originalName)
-      .replace(/\$\{ext\}/g, values.ext),
-  );
+  return {
+    workspaceDir: toPosixPath(values.workspacePath),
+    publicDir: values.publicDir,
+    imageRoot: values.imageRoot,
+    contentRoot: values.contentRoot,
+    relativeDir: values.articleInfo.relativeDir,
+    fileName: values.articleInfo.fileName,
+    relativePath: values.articlePath,
+    documentPath: values.articleInfo.workspaceRelativeDocumentPath,
+    contentDocumentPath: values.articleInfo.contentRelativeDocumentPath,
+    imageName: values.imageName,
+    timestamp: values.timestamp,
+    now: values.timestamp,
+    ext: values.ext,
+    originalName: sanitizePathSegment(originalName),
+  };
+}
+
+function renderImageName(template: string, values: { ext: string; originalName?: string; fileName: string; timestamp: string }): string {
+  const originalName = values.originalName ? path.parse(values.originalName).name : "image";
+
+  return sanitizePathSegment(renderTemplate(template, {
+    timestamp: values.timestamp,
+    now: values.timestamp,
+    fileName: values.fileName,
+    originalName: sanitizePathSegment(originalName),
+    ext: values.ext,
+  }));
+}
+
+function renderTemplate(template: string, values: ImageTemplateValues): string {
+  return template.replace(/\$\{([^}]+)\}/g, (match, key: string) => values[key] ?? match);
+}
+
+function normalizeTemplatePath(value: string): string {
+  return toPosixPath(value).replace(/\/+/g, "/").replace(/\/$/g, "");
+}
+
+function resolveWorkspacePath(workspacePath: string, templatePath: string): string {
+  if (path.isAbsolute(templatePath)) {
+    return templatePath;
+  }
+
+  return path.join(workspacePath, ...templatePath.split("/"));
+}
+
+function markdownLinkForTarget(targetPath: string, documentPath: string, publicDirPath: string): string {
+  const publicRelativePath = toPosixPath(path.relative(publicDirPath, targetPath));
+  if (publicRelativePath && !publicRelativePath.startsWith("../") && publicRelativePath !== ".." && !path.isAbsolute(publicRelativePath)) {
+    return `/${publicRelativePath}`;
+  }
+
+  return normalizeMarkdownLink(toPosixPath(path.relative(path.dirname(documentPath), targetPath)));
+}
+
+function normalizeMarkdownLink(value: string): string {
+  return toPosixPath(value).replace(/ /g, "%20");
 }
 
 function parseDataUrl(dataUrl: string): { mime: string | undefined; buffer: Buffer } {
@@ -314,7 +413,7 @@ function toPosixPath(value: string): string {
   return value.replace(/\\/g, "/");
 }
 
-function sanitizeFileName(value: string): string {
+function sanitizePathSegment(value: string): string {
   return value.replace(/[\\/:*?"<>|]+/g, "-").replace(/\s+/g, "-");
 }
 

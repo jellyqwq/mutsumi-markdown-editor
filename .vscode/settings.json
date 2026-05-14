@@ -1,0 +1,7 @@
+{
+  "mutsumiMarkdown.publicDir": "src/.vuepress/public",
+  "mutsumiMarkdown.imageRoot": "images",
+  "mutsumiMarkdown.contentRoot": "src",
+  "mutsumiMarkdown.imageName": "${timestamp}.${ext}",
+  "mutsumiMarkdown.imagePathTemplate": "${publicDir}/${imageRoot}/${relativeDir}/${fileName}/${timestamp}.${ext}"
+}

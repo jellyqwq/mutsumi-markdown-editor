@@ -18,6 +18,19 @@ Markdown 中插入的图片地址为：
 /images/life/journal/2026-05-07/<timestamp>.png
 ```
 
+也可以在项目的 `.vscode/settings.json` 里显式写路径模板：
+
+```json
+{
+  "mutsumiMarkdown.publicDir": "src/.vuepress/public",
+  "mutsumiMarkdown.imageRoot": "images",
+  "mutsumiMarkdown.contentRoot": "src",
+  "mutsumiMarkdown.imagePathTemplate": "${publicDir}/${imageRoot}/${relativeDir}/${fileName}/${timestamp}.${ext}"
+}
+```
+
+`src/life/journal/2026-05-07.md` 会把 `${relativeDir}` 解析为 `life/journal`，把 `${fileName}` 解析为 `2026-05-07`。
+
 ## 开发
 
 ```bash

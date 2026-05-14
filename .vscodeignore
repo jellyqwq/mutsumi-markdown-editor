@@ -1,4 +1,5 @@
 .vscode/**
+!.vscode/settings.json
 .gitignore
 src/**
 tsconfig.json
