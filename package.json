@@ -1,0 +1,69 @@
+{
+  "name": "mutsumi-markdown-editor",
+  "displayName": "Mutsumi Markdown Editor",
+  "description": "A clean Vditor-based WYSIWYG Markdown editor for VuePress blogs.",
+  "version": "0.0.1",
+  "publisher": "jellyqwq",
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "activationEvents": [
+    "onCustomEditor:mutsumi.markdownEditor"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "customEditors": [
+      {
+        "viewType": "mutsumi.markdownEditor",
+        "displayName": "Mutsumi Markdown Editor",
+        "selector": [
+          {
+            "filenamePattern": "*.md"
+          }
+        ],
+        "priority": "option"
+      }
+    ],
+    "configuration": {
+      "title": "Mutsumi Markdown Editor",
+      "properties": {
+        "mutsumiMarkdown.publicDir": {
+          "type": "string",
+          "default": "src/.vuepress/public",
+          "description": "Workspace-relative public assets directory."
+        },
+        "mutsumiMarkdown.imageRoot": {
+          "type": "string",
+          "default": "images",
+          "description": "Directory inside the public assets directory used for pasted images."
+        },
+        "mutsumiMarkdown.contentRoot": {
+          "type": "string",
+          "default": "src",
+          "description": "Workspace-relative content root removed from article paths when deriving image folders."
+        },
+        "mutsumiMarkdown.imageName": {
+          "type": "string",
+          "default": "${timestamp}.${ext}",
+          "description": "Pasted image file name template. Supports ${timestamp}, ${now}, ${fileName}, ${ext}, and ${originalName}."
+        }
+      }
+    }
+  },
+  "scripts": {
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "vscode:prepublish": "npm run compile"
+  },
+  "dependencies": {
+    "vditor": "^3.11.2"
+  },
+  "devDependencies": {
+    "@types/node": "^20.12.12",
+    "@types/vscode": "^1.85.0",
+    "typescript": "^5.4.5"
+  }
+}

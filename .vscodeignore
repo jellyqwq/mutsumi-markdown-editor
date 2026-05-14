@@ -1,0 +1,9 @@
+.vscode/**
+.gitignore
+src/**
+tsconfig.json
+**/*.map
+**/*.ts
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*

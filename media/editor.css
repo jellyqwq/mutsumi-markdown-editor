@@ -1,0 +1,193 @@
+:root {
+  color-scheme: light dark;
+}
+
+body.vscode-light {
+  color-scheme: light;
+}
+
+body.vscode-dark,
+body.vscode-high-contrast {
+  color-scheme: dark;
+}
+
+html,
+body,
+#app,
+#editor {
+  height: 100%;
+  min-height: 100%;
+  margin: 0;
+}
+
+body {
+  overflow: hidden;
+  background: var(--vscode-editor-background);
+  color: var(--vscode-editor-foreground);
+  font-family: var(--vscode-font-family);
+}
+
+#app {
+  display: flex;
+  flex-direction: column;
+}
+
+.vditor {
+  --border-color: var(--vscode-panel-border);
+  --second-color: var(--vscode-descriptionForeground);
+  --panel-background-color: var(--vscode-dropdown-background);
+  --panel-shadow: 0 6px 18px rgba(0, 0, 0, 0.18);
+  --toolbar-background-color: var(--vscode-editorGroupHeader-tabsBackground);
+  --toolbar-icon-color: var(--vscode-icon-foreground);
+  --toolbar-icon-hover-color: var(--vscode-textLink-foreground);
+  --textarea-background-color: var(--vscode-editor-background);
+  --textarea-text-color: var(--vscode-editor-foreground);
+  --count-background-color: var(--vscode-editorWidget-background);
+  --heading-border-color: var(--vscode-panel-border);
+  --blockquote-color: var(--vscode-descriptionForeground);
+
+  height: 100% !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: var(--vscode-editor-background);
+  color: var(--vscode-editor-foreground);
+}
+
+body.vscode-light .vditor {
+  --panel-shadow: 0 6px 18px rgba(0, 0, 0, 0.14);
+}
+
+body.vscode-dark .vditor,
+body.vscode-high-contrast .vditor {
+  --panel-shadow: 0 8px 22px rgba(0, 0, 0, 0.38);
+}
+
+.vditor-toolbar {
+  border-bottom-color: var(--vscode-panel-border) !important;
+  background: var(--vscode-editorGroupHeader-tabsBackground) !important;
+}
+
+.vditor-toolbar__item .vditor-tooltipped,
+.vditor-icon {
+  color: var(--vscode-icon-foreground) !important;
+}
+
+.vditor-toolbar__item .vditor-tooltipped:hover,
+.vditor-toolbar__item .vditor-tooltipped:focus,
+.vditor-toolbar__item .vditor-tooltipped:active,
+.vditor-icon:hover,
+.vditor-icon--current,
+.vditor-menu--current {
+  color: var(--vscode-textLink-foreground) !important;
+  background: var(--vscode-toolbar-hoverBackground, transparent) !important;
+}
+
+.vditor-toolbar__item svg,
+.vditor-icon svg {
+  fill: currentColor !important;
+  stroke: currentColor !important;
+}
+
+.vditor-toolbar__divider {
+  border-left-color: var(--vscode-panel-border) !important;
+}
+
+.vditor-content,
+.vditor-wysiwyg,
+.vditor-ir,
+.vditor-sv,
+.vditor-preview,
+.vditor-reset,
+.vditor-textarea {
+  background: var(--vscode-editor-background) !important;
+  color: var(--vscode-editor-foreground) !important;
+}
+
+.vditor-wysiwyg {
+  padding: 28px max(28px, calc((100vw - 860px) / 2)) 60px !important;
+  font-size: 16px;
+  line-height: 1.75;
+}
+
+.vditor-wysiwyg *,
+.vditor-reset {
+  border-color: var(--vscode-panel-border);
+}
+
+.vditor-wysiwyg a,
+.vditor-reset a {
+  color: var(--vscode-textLink-foreground);
+}
+
+.vditor-wysiwyg h1,
+.vditor-wysiwyg h2,
+.vditor-wysiwyg h3,
+.vditor-wysiwyg h4,
+.vditor-wysiwyg h5,
+.vditor-wysiwyg h6,
+.vditor-reset h1,
+.vditor-reset h2,
+.vditor-reset h3,
+.vditor-reset h4,
+.vditor-reset h5,
+.vditor-reset h6 {
+  color: var(--vscode-editor-foreground);
+  border-bottom-color: var(--vscode-panel-border);
+}
+
+.vditor-wysiwyg blockquote,
+.vditor-reset blockquote {
+  color: var(--vscode-descriptionForeground);
+  border-left-color: var(--vscode-textBlockQuote-border);
+  background: var(--vscode-textBlockQuote-background);
+}
+
+.vditor-wysiwyg code,
+.vditor-wysiwyg pre,
+.vditor-reset code,
+.vditor-reset pre {
+  color: var(--vscode-textPreformat-foreground);
+  background: var(--vscode-textCodeBlock-background);
+}
+
+.vditor-wysiwyg table tr,
+.vditor-reset table tr {
+  background: var(--vscode-editor-background);
+  border-top-color: var(--vscode-panel-border);
+}
+
+.vditor-wysiwyg table tr:nth-child(2n),
+.vditor-reset table tr:nth-child(2n) {
+  background: var(--vscode-editorWidget-background);
+}
+
+.vditor-wysiwyg table th,
+.vditor-wysiwyg table td,
+.vditor-reset table th,
+.vditor-reset table td {
+  border-color: var(--vscode-panel-border);
+}
+
+.vditor-wysiwyg img {
+  max-width: 100%;
+  height: auto;
+}
+
+.vditor-panel,
+.vditor-hint,
+.vditor-wysiwyg__preview,
+.vditor-tip {
+  color: var(--vscode-editor-foreground) !important;
+  background: var(--vscode-dropdown-background) !important;
+  border-color: var(--vscode-panel-border) !important;
+}
+
+.vditor-hint button {
+  color: var(--vscode-editor-foreground) !important;
+}
+
+.vditor-hint--current,
+.vditor-hint button:not(.vditor-menu--disabled):hover {
+  color: var(--vscode-list-hoverForeground) !important;
+  background: var(--vscode-list-hoverBackground) !important;
+}
