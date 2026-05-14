@@ -7,6 +7,8 @@
   let updateTimer;
   let themeObserver;
   let themeStyleElement;
+  let outlineObserver;
+  let lastOutlineState;
   const pendingImages = new Map();
 
   window.addEventListener("message", (event) => {
@@ -19,6 +21,7 @@
           publicBaseUri: trimTrailingSlash(message.publicBaseUri || ""),
           documentDirUri: trimTrailingSlash(message.documentDirUri || ""),
           imageRoot: message.imageRoot || "/images",
+          outlineEnabled: Boolean(message.outlineEnabled),
         };
         createEditor(message.text || "");
         break;
@@ -63,6 +66,10 @@
       value: initialValue,
       height: "100%",
       lang: "zh_CN",
+      outline: {
+        enable: settings.outlineEnabled,
+        position: "left",
+      },
       cache: {
         enable: false,
       },
@@ -78,6 +85,8 @@
       after() {
         applyEditorTheme();
         ensureToolbarIconFallback();
+        applyOutlineState(settings.outlineEnabled);
+        watchOutlineState();
         watchThemeChanges();
         queueImageResolution();
       },
@@ -209,6 +218,66 @@
     apply();
     window.setTimeout(apply, 100);
     window.setTimeout(apply, 500);
+  }
+
+  function applyOutlineState(enabled) {
+    if (!editor || !editor.vditor || !editor.vditor.outline) {
+      return;
+    }
+
+    editor.vditor.options.outline.enable = Boolean(enabled);
+    editor.vditor.outline.toggle(editor.vditor, Boolean(enabled), false);
+    rememberOutlineState(Boolean(enabled), false);
+  }
+
+  function watchOutlineState() {
+    if (outlineObserver || !editor || !editor.vditor) {
+      return;
+    }
+
+    const notify = () => {
+      window.setTimeout(() => rememberOutlineState(readOutlineState(), true), 0);
+    };
+    const outlineButton = editor.vditor.toolbar.elements.outline?.firstElementChild;
+    outlineButton?.addEventListener("click", notify);
+
+    outlineObserver = new MutationObserver(notify);
+    if (editor.vditor.outline?.element) {
+      outlineObserver.observe(editor.vditor.outline.element, {
+        attributes: true,
+        attributeFilter: ["style", "class"],
+      });
+    }
+    if (outlineButton) {
+      outlineObserver.observe(outlineButton, {
+        attributes: true,
+        attributeFilter: ["class"],
+      });
+    }
+
+    rememberOutlineState(readOutlineState(), false);
+  }
+
+  function readOutlineState() {
+    if (!editor || !editor.vditor || !editor.vditor.outline) {
+      return false;
+    }
+
+    return editor.vditor.outline.element.style.display !== "none" && Boolean(editor.vditor.options.outline.enable);
+  }
+
+  function rememberOutlineState(enabled, notifyExtension) {
+    if (lastOutlineState === enabled) {
+      return;
+    }
+
+    lastOutlineState = enabled;
+    if (notifyExtension) {
+      vscode.postMessage({
+        type: "outlineState",
+        enabled,
+      });
+    }
   }
 
   function saveImages(files) {

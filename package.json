@@ -2,7 +2,7 @@
   "name": "mutsumi-markdown-editor",
   "displayName": "Mutsumi Markdown Editor",
   "description": "A clean Vditor-based WYSIWYG Markdown editor for VuePress blogs.",
-  "version": "0.0.5",
+  "version": "0.0.6",
   "publisher": "jellyqwq",
   "engines": {
     "vscode": "^1.85.0"
@@ -59,6 +59,11 @@
           "type": "string",
           "default": "",
           "description": "Optional Markdown image link template. Supports the same variables as imagePathTemplate. When empty, links are derived from publicDir, such as /images/article/name.png."
+        },
+        "mutsumiMarkdown.outlineDefaultOpen": {
+          "type": "boolean",
+          "default": false,
+          "description": "Controls whether the outline is open before the editor has remembered a user choice in the current workspace."
         }
       }
     }

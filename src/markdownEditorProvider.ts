@@ -5,6 +5,7 @@ import * as vscode from "vscode";
 type EditorMessage =
   | { type: "ready" }
   | { type: "update"; text: string }
+  | { type: "outlineState"; enabled: boolean }
   | {
       type: "saveImage";
       requestId: string;
@@ -22,6 +23,7 @@ type ImageTemplateValues = Record<string, string>;
 
 export class MutsumiMarkdownEditorProvider implements vscode.CustomTextEditorProvider {
   public static readonly viewType = "mutsumi.markdownEditor";
+  private static readonly outlineStateKey = "mutsumiMarkdown.outlineEnabled";
 
   public static register(context: vscode.ExtensionContext): vscode.Disposable {
     const provider = new MutsumiMarkdownEditorProvider(context);
@@ -92,6 +94,10 @@ export class MutsumiMarkdownEditorProvider implements vscode.CustomTextEditorPro
           }
           return;
 
+        case "outlineState":
+          await this.context.workspaceState.update(MutsumiMarkdownEditorProvider.outlineStateKey, message.enabled);
+          return;
+
         case "saveImage":
           try {
             const result = await this.saveImage(document, message);
@@ -122,6 +128,8 @@ export class MutsumiMarkdownEditorProvider implements vscode.CustomTextEditorPro
     const config = vscode.workspace.getConfiguration("mutsumiMarkdown", document.uri);
     const publicDir = normalizeRelativePath(config.get("publicDir", "src/.vuepress/public"));
     const imageRoot = normalizeRelativePath(config.get("imageRoot", "images"));
+    const outlineDefaultOpen = config.get("outlineDefaultOpen", false);
+    const outlineEnabled = this.context.workspaceState.get(MutsumiMarkdownEditorProvider.outlineStateKey, outlineDefaultOpen);
 
     const workspacePath = workspaceFolder?.uri.fsPath;
     const publicDirPath = workspacePath ? path.join(workspacePath, publicDir) : undefined;
@@ -134,6 +142,7 @@ export class MutsumiMarkdownEditorProvider implements vscode.CustomTextEditorPro
       publicBaseUri: publicDirPath ? webview.asWebviewUri(vscode.Uri.file(publicDirPath)).toString() : undefined,
       documentDirUri: webview.asWebviewUri(vscode.Uri.file(documentDirPath)).toString(),
       imageRoot: `/${imageRoot}`,
+      outlineEnabled,
     });
   }
 
