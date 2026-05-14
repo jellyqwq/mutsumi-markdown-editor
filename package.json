@@ -4,6 +4,7 @@
   "description": "A clean Vditor-based WYSIWYG Markdown editor for VuePress blogs.",
   "version": "0.0.6",
   "publisher": "jellyqwq",
+  "icon": "resources/icon.png",
   "engines": {
     "vscode": "^1.85.0"
   },
