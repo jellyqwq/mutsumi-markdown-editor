@@ -2,7 +2,7 @@
   "name": "mutsumi-markdown-editor",
   "displayName": "Mutsumi Markdown Editor",
   "description": "A clean Vditor-based WYSIWYG Markdown editor for VuePress blogs.",
-  "version": "0.0.6",
+  "version": "0.0.7",
   "publisher": "jellyqwq",
   "icon": "resources/icon.png",
   "engines": {

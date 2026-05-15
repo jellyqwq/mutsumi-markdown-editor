@@ -135,7 +135,7 @@ body.vscode-high-contrast .vditor-icon {
 }
 
 .vditor-wysiwyg {
-  padding: 28px max(28px, calc((100vw - 860px) / 2)) 60px !important;
+  padding: 28px clamp(24px, 3vw, 56px) 60px clamp(56px, 4vw, 84px) !important;
   font-size: 16px;
   line-height: 1.75;
 }
