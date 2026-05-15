@@ -50,9 +50,17 @@ jobs:
         run: |
           TAG="$GITHUB_REF_NAME"
           VSIX="${{ steps.version.outputs.vsix }}"
+          NOTES_FILE=".github/release-notes/${TAG}.md"
 
           if gh release view "$TAG" >/dev/null 2>&1; then
             gh release upload "$TAG" "$VSIX" --clobber
+            if [ -f "$NOTES_FILE" ]; then
+              gh release edit "$TAG" --notes-file "$NOTES_FILE"
+            fi
           else
-            gh release create "$TAG" "$VSIX" --title "$TAG" --generate-notes
+            if [ -f "$NOTES_FILE" ]; then
+              gh release create "$TAG" "$VSIX" --title "$TAG" --notes-file "$NOTES_FILE"
+            else
+              gh release create "$TAG" "$VSIX" --title "$TAG" --generate-notes
+            fi
           fi

@@ -2,7 +2,7 @@
   "name": "mutsumi-markdown-editor",
   "displayName": "Mutsumi Markdown Editor",
   "description": "A clean Vditor-based WYSIWYG Markdown editor for VuePress blogs.",
-  "version": "0.0.7",
+  "version": "0.0.8",
   "publisher": "jellyqwq",
   "icon": "resources/icon.png",
   "engines": {
@@ -26,6 +26,100 @@
           }
         ],
         "priority": "option"
+      }
+    ],
+    "commands": [
+      {
+        "command": "mutsumiMarkdown.table.insertRowAbove",
+        "title": "Mutsumi Markdown: Insert Table Row Above"
+      },
+      {
+        "command": "mutsumiMarkdown.table.insertRowBelow",
+        "title": "Mutsumi Markdown: Insert Table Row Below"
+      },
+      {
+        "command": "mutsumiMarkdown.table.insertColumnLeft",
+        "title": "Mutsumi Markdown: Insert Table Column Left"
+      },
+      {
+        "command": "mutsumiMarkdown.table.insertColumnRight",
+        "title": "Mutsumi Markdown: Insert Table Column Right"
+      },
+      {
+        "command": "mutsumiMarkdown.table.deleteRow",
+        "title": "Mutsumi Markdown: Delete Table Row"
+      },
+      {
+        "command": "mutsumiMarkdown.table.deleteColumn",
+        "title": "Mutsumi Markdown: Delete Table Column"
+      },
+      {
+        "command": "mutsumiMarkdown.table.alignLeft",
+        "title": "Mutsumi Markdown: Align Table Column Left"
+      },
+      {
+        "command": "mutsumiMarkdown.table.alignCenter",
+        "title": "Mutsumi Markdown: Align Table Column Center"
+      },
+      {
+        "command": "mutsumiMarkdown.table.alignRight",
+        "title": "Mutsumi Markdown: Align Table Column Right"
+      }
+    ],
+    "keybindings": [
+      {
+        "command": "mutsumiMarkdown.table.insertRowAbove",
+        "key": "ctrl+shift+f",
+        "mac": "cmd+shift+f",
+        "when": "activeCustomEditorId == 'mutsumi.markdownEditor'"
+      },
+      {
+        "command": "mutsumiMarkdown.table.insertRowBelow",
+        "key": "ctrl+=",
+        "mac": "cmd+=",
+        "when": "activeCustomEditorId == 'mutsumi.markdownEditor'"
+      },
+      {
+        "command": "mutsumiMarkdown.table.insertColumnLeft",
+        "key": "ctrl+shift+g",
+        "mac": "cmd+shift+g",
+        "when": "activeCustomEditorId == 'mutsumi.markdownEditor'"
+      },
+      {
+        "command": "mutsumiMarkdown.table.insertColumnRight",
+        "key": "ctrl+shift+=",
+        "mac": "cmd+shift+=",
+        "when": "activeCustomEditorId == 'mutsumi.markdownEditor'"
+      },
+      {
+        "command": "mutsumiMarkdown.table.deleteRow",
+        "key": "ctrl+-",
+        "mac": "cmd+-",
+        "when": "activeCustomEditorId == 'mutsumi.markdownEditor'"
+      },
+      {
+        "command": "mutsumiMarkdown.table.deleteColumn",
+        "key": "ctrl+shift+-",
+        "mac": "cmd+shift+-",
+        "when": "activeCustomEditorId == 'mutsumi.markdownEditor'"
+      },
+      {
+        "command": "mutsumiMarkdown.table.alignLeft",
+        "key": "ctrl+shift+l",
+        "mac": "cmd+shift+l",
+        "when": "activeCustomEditorId == 'mutsumi.markdownEditor'"
+      },
+      {
+        "command": "mutsumiMarkdown.table.alignCenter",
+        "key": "ctrl+shift+c",
+        "mac": "cmd+shift+c",
+        "when": "activeCustomEditorId == 'mutsumi.markdownEditor'"
+      },
+      {
+        "command": "mutsumiMarkdown.table.alignRight",
+        "key": "ctrl+shift+r",
+        "mac": "cmd+shift+r",
+        "when": "activeCustomEditorId == 'mutsumi.markdownEditor'"
       }
     ],
     "configuration": {

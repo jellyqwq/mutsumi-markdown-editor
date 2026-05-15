@@ -28,15 +28,36 @@ export class MutsumiMarkdownEditorProvider implements vscode.CustomTextEditorPro
   public static register(context: vscode.ExtensionContext): vscode.Disposable {
     const provider = new MutsumiMarkdownEditorProvider(context);
 
-    return vscode.window.registerCustomEditorProvider(MutsumiMarkdownEditorProvider.viewType, provider, {
-      webviewOptions: {
-        retainContextWhenHidden: true,
-      },
-      supportsMultipleEditorsPerDocument: false,
-    });
+    return vscode.Disposable.from(
+      vscode.window.registerCustomEditorProvider(MutsumiMarkdownEditorProvider.viewType, provider, {
+        webviewOptions: {
+          retainContextWhenHidden: true,
+        },
+        supportsMultipleEditorsPerDocument: false,
+      }),
+      vscode.commands.registerCommand("mutsumiMarkdown.table.insertRowAbove", () => provider.postTableAction("insertRowAbove")),
+      vscode.commands.registerCommand("mutsumiMarkdown.table.insertRowBelow", () => provider.postTableAction("insertRowBelow")),
+      vscode.commands.registerCommand("mutsumiMarkdown.table.insertColumnLeft", () => provider.postTableAction("insertColumnLeft")),
+      vscode.commands.registerCommand("mutsumiMarkdown.table.insertColumnRight", () => provider.postTableAction("insertColumnRight")),
+      vscode.commands.registerCommand("mutsumiMarkdown.table.deleteRow", () => provider.postTableAction("deleteRow")),
+      vscode.commands.registerCommand("mutsumiMarkdown.table.deleteColumn", () => provider.postTableAction("deleteColumn")),
+      vscode.commands.registerCommand("mutsumiMarkdown.table.alignLeft", () => provider.postTableAction("alignLeft")),
+      vscode.commands.registerCommand("mutsumiMarkdown.table.alignCenter", () => provider.postTableAction("alignCenter")),
+      vscode.commands.registerCommand("mutsumiMarkdown.table.alignRight", () => provider.postTableAction("alignRight")),
+    );
   }
 
+  private readonly panels = new Set<vscode.WebviewPanel>();
+
   private constructor(private readonly context: vscode.ExtensionContext) {}
+
+  private async postTableAction(action: string): Promise<void> {
+    const panel = Array.from(this.panels).find((item) => item.active) ?? Array.from(this.panels).find((item) => item.visible);
+    await panel?.webview.postMessage({
+      type: "tableAction",
+      action,
+    });
+  }
 
   public async resolveCustomTextEditor(
     document: vscode.TextDocument,
@@ -54,6 +75,7 @@ export class MutsumiMarkdownEditorProvider implements vscode.CustomTextEditorPro
     };
 
     webviewPanel.webview.html = this.getHtml(webviewPanel.webview, workspaceFolder, document);
+    this.panels.add(webviewPanel);
 
     let lastTextFromWebview = document.getText();
     let applyingWebviewEdit = false;
@@ -75,6 +97,7 @@ export class MutsumiMarkdownEditorProvider implements vscode.CustomTextEditorPro
     });
 
     webviewPanel.onDidDispose(() => {
+      this.panels.delete(webviewPanel);
       changeDocumentSubscription.dispose();
     });
 

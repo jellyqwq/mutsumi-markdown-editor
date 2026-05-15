@@ -40,6 +40,9 @@ body {
   --mutsumi-editor-fg: var(--vscode-editor-foreground, #24292f);
   --mutsumi-border: var(--vscode-panel-border, #d0d7de);
   --mutsumi-panel-bg: var(--vscode-dropdown-background, var(--vscode-editorWidget-background, #ffffff));
+  --mutsumi-table-bg: var(--vscode-editor-background, #ffffff);
+  --mutsumi-table-alt-bg: var(--vscode-list-hoverBackground, rgba(127, 127, 127, 0.06));
+  --mutsumi-table-header-bg: var(--vscode-editorWidget-background, rgba(127, 127, 127, 0.08));
 
   --border-color: var(--mutsumi-border);
   --second-color: var(--vscode-descriptionForeground, #6e7781);
@@ -76,6 +79,9 @@ body.vscode-high-contrast .vditor {
   --mutsumi-editor-fg: var(--vscode-editor-foreground, #d4d4d4);
   --mutsumi-border: var(--vscode-panel-border, #3c3c3c);
   --mutsumi-panel-bg: var(--vscode-dropdown-background, var(--vscode-editorWidget-background, #252526));
+  --mutsumi-table-bg: var(--vscode-editor-background, #1e1e1e);
+  --mutsumi-table-alt-bg: var(--vscode-list-hoverBackground, rgba(127, 127, 127, 0.10));
+  --mutsumi-table-header-bg: var(--vscode-editorWidget-background, rgba(127, 127, 127, 0.12));
   --panel-shadow: 0 8px 22px rgba(0, 0, 0, 0.38);
 }
 
@@ -181,22 +187,64 @@ body.vscode-high-contrast .vditor-icon {
   background: var(--vscode-textCodeBlock-background, rgba(127, 127, 127, 0.12));
 }
 
+.vditor-wysiwyg__preview:has(.language-abc svg),
+.vditor-ir__preview:has(.language-abc svg) {
+  background: transparent !important;
+  text-align: center;
+}
+
+.vditor-reset .language-abc {
+  color: var(--vscode-textPreformat-foreground, var(--mutsumi-editor-fg)) !important;
+  background: var(--vscode-textCodeBlock-background, rgba(127, 127, 127, 0.12)) !important;
+  box-sizing: border-box;
+  overflow-x: auto;
+}
+
+.vditor-reset .language-abc:has(svg) {
+  color: #111111 !important;
+  background: transparent !important;
+}
+
+.vditor-reset .language-abc svg {
+  display: block;
+  margin-inline: auto;
+  padding: 16px 20px;
+  border: 1px solid rgba(0, 0, 0, 0.16);
+  border-radius: 2px;
+  box-sizing: border-box;
+  color: #111111 !important;
+  background: #f7f5ed !important;
+}
+
+.vditor-wysiwyg table,
+.vditor-reset table {
+  color: var(--mutsumi-editor-fg) !important;
+  background: var(--mutsumi-table-bg) !important;
+}
+
 .vditor-wysiwyg table tr,
 .vditor-reset table tr {
-  background: var(--mutsumi-editor-bg);
-  border-top-color: var(--mutsumi-border);
+  background: var(--mutsumi-table-bg) !important;
+  border-top-color: var(--mutsumi-border) !important;
+}
+
+.vditor-wysiwyg table thead tr,
+.vditor-reset table thead tr {
+  background: var(--mutsumi-table-header-bg) !important;
 }
 
 .vditor-wysiwyg table tr:nth-child(2n),
 .vditor-reset table tr:nth-child(2n) {
-  background: var(--vscode-editorWidget-background, rgba(127, 127, 127, 0.08));
+  background: var(--mutsumi-table-alt-bg) !important;
 }
 
 .vditor-wysiwyg table th,
 .vditor-wysiwyg table td,
 .vditor-reset table th,
 .vditor-reset table td {
-  border-color: var(--mutsumi-border);
+  color: var(--mutsumi-editor-fg) !important;
+  background: inherit !important;
+  border-color: var(--mutsumi-border) !important;
 }
 
 .vditor-wysiwyg img {
@@ -211,6 +259,24 @@ body.vscode-high-contrast .vditor-icon {
   color: var(--mutsumi-editor-fg) !important;
   background: var(--mutsumi-panel-bg) !important;
   border-color: var(--mutsumi-border) !important;
+}
+
+.vditor-wysiwyg > .vditor-panel--none {
+  color: var(--mutsumi-toolbar-icon) !important;
+  background: var(--mutsumi-panel-bg) !important;
+  border: 1px solid var(--mutsumi-border) !important;
+  box-shadow: var(--panel-shadow) !important;
+  opacity: 1 !important;
+}
+
+.vditor-wysiwyg > .vditor-panel--none .vditor-input {
+  color: var(--mutsumi-editor-fg) !important;
+  background: var(--mutsumi-panel-bg) !important;
+}
+
+.vditor-wysiwyg > .vditor-panel--none .vditor-input:focus {
+  background: var(--vscode-input-background, var(--mutsumi-toolbar-bg)) !important;
+  outline: 1px solid var(--vscode-focusBorder, var(--mutsumi-toolbar-icon-hover)) !important;
 }
 
 .vditor-hint button {

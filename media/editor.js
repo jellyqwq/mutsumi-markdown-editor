@@ -9,6 +9,10 @@
   let themeStyleElement;
   let outlineObserver;
   let lastOutlineState;
+  let tableCellClickBound = false;
+  let tableHotkeyBound = false;
+  let tableSelectionBound = false;
+  let lastTableCell = null;
   const pendingImages = new Map();
 
   window.addEventListener("message", (event) => {
@@ -42,6 +46,10 @@
       case "imageSaveFailed":
         failImageSave(message.requestId, message.message);
         break;
+
+      case "tableAction":
+        runTableAction(message.action);
+        break;
     }
   });
 
@@ -70,6 +78,9 @@
         enable: settings.outlineEnabled,
         position: "left",
       },
+      preview: {
+        maxWidth: 960,
+      },
       cache: {
         enable: false,
       },
@@ -88,6 +99,9 @@
         applyOutlineState(settings.outlineEnabled);
         watchOutlineState();
         watchThemeChanges();
+        watchTableCellClicks();
+        watchTableSelection();
+        watchTableHotkeys();
         queueImageResolution();
       },
       upload: {
@@ -202,6 +216,11 @@
         background: ${editorBg} !important;
         color: ${editorFg} !important;
       }
+      body .vditor-wysiwyg > .vditor-panel--none {
+        background: ${readCssVariable("--vscode-dropdown-background", readCssVariable("--vscode-editorWidget-background", editorBg))} !important;
+        border-color: ${border} !important;
+        color: ${icon} !important;
+      }
     `;
   }
 
@@ -218,6 +237,472 @@
     apply();
     window.setTimeout(apply, 100);
     window.setTimeout(apply, 500);
+  }
+
+  function watchTableCellClicks() {
+    const editorRoot = getEditorRoot();
+    if (tableCellClickBound || !editorRoot) {
+      return;
+    }
+
+    tableCellClickBound = true;
+    editorRoot.addEventListener("click", (event) => {
+      const cell = event.target?.closest?.("td, th");
+      if (!cell || !isTableCellInEditableArea(cell)) {
+        return;
+      }
+
+      rememberTableCell(cell);
+      focusTableCell(cell);
+      window.setTimeout(() => showFallbackTablePopover(cell), 260);
+    }, true);
+  }
+
+  function watchTableSelection() {
+    const editorRoot = getEditorRoot();
+    if (tableSelectionBound || !editorRoot) {
+      return;
+    }
+
+    tableSelectionBound = true;
+
+    editorRoot.addEventListener("mousedown", (event) => {
+      const cell = event.target?.closest?.("td, th");
+      if (cell && isTableCellInEditableArea(cell)) {
+        rememberTableCell(cell);
+      }
+    }, true);
+
+    editorRoot.addEventListener("focusin", (event) => {
+      const cell = event.target?.closest?.("td, th");
+      if (cell && isTableCellInEditableArea(cell)) {
+        rememberTableCell(cell);
+      }
+    }, true);
+
+    document.addEventListener("selectionchange", () => {
+      const selection = window.getSelection();
+      const cell = selection && selection.rangeCount > 0 ? tableCellFromNode(selection.anchorNode) : null;
+      if (cell) {
+        rememberTableCell(cell);
+      }
+    });
+  }
+
+  function watchTableHotkeys() {
+    const editorRoot = getEditorRoot();
+    if (tableHotkeyBound || !editorRoot) {
+      return;
+    }
+
+    tableHotkeyBound = true;
+    editorRoot.addEventListener("keydown", (event) => {
+      if (event.isComposing || event.altKey || event.target?.closest?.(".vditor-panel--none")) {
+        return;
+      }
+
+      const eventCell = tableCellFromNode(event.target);
+      const cell = eventCell ? rememberTableCell(eventCell) : getActiveTableCell();
+      const action = cell ? tableHotkeyAction(event) : null;
+      if (!action) {
+        return;
+      }
+
+      event.preventDefault();
+      event.stopPropagation();
+      event.stopImmediatePropagation();
+      action(cell);
+    }, true);
+  }
+
+  function tableHotkeyAction(event) {
+    if (!isPrimaryShortcut(event)) {
+      return null;
+    }
+
+    if (event.shiftKey) {
+      if (isKey(event, "f")) {
+        return (cell) => insertTableRow(cell, "above");
+      }
+      if (isKey(event, "g")) {
+        return (cell) => insertTableColumn(cell, "left");
+      }
+      if (isEqualKey(event)) {
+        return (cell) => insertTableColumn(cell, "right");
+      }
+      if (isMinusKey(event)) {
+        return deleteTableColumn;
+      }
+      if (isKey(event, "l")) {
+        return (cell) => setTableColumnAlign(cell, "left");
+      }
+      if (isKey(event, "c")) {
+        return (cell) => setTableColumnAlign(cell, "center");
+      }
+      if (isKey(event, "r")) {
+        return (cell) => setTableColumnAlign(cell, "right");
+      }
+      return null;
+    }
+
+    if (isEqualKey(event)) {
+      return (cell) => insertTableRow(cell, "below");
+    }
+    if (isMinusKey(event)) {
+      return deleteTableRow;
+    }
+
+    return null;
+  }
+
+  function runTableAction(action) {
+    const cell = getActiveTableCell();
+    if (!cell) {
+      return;
+    }
+
+    focusTableCell(cell);
+
+    switch (action) {
+      case "insertRowAbove":
+        insertTableRow(cell, "above");
+        return;
+      case "insertRowBelow":
+        insertTableRow(cell, "below");
+        return;
+      case "insertColumnLeft":
+        insertTableColumn(cell, "left");
+        return;
+      case "insertColumnRight":
+        insertTableColumn(cell, "right");
+        return;
+      case "deleteRow":
+        deleteTableRow(cell);
+        return;
+      case "deleteColumn":
+        deleteTableColumn(cell);
+        return;
+      case "alignLeft":
+        setTableColumnAlign(cell, "left");
+        return;
+      case "alignCenter":
+        setTableColumnAlign(cell, "center");
+        return;
+      case "alignRight":
+        setTableColumnAlign(cell, "right");
+        return;
+    }
+  }
+
+  function getActiveTableCell() {
+    const selection = window.getSelection();
+    if (selection && selection.rangeCount > 0) {
+      const selectedCell = tableCellFromNode(selection.anchorNode);
+      if (selectedCell) {
+        return rememberTableCell(selectedCell);
+      }
+    }
+
+    const focusedCell = tableCellFromNode(document.activeElement);
+    if (focusedCell) {
+      return rememberTableCell(focusedCell);
+    }
+
+    if (lastTableCell && lastTableCell.isConnected && isTableCellInEditableArea(lastTableCell)) {
+      return lastTableCell;
+    }
+
+    return null;
+  }
+
+  function tableCellFromNode(node) {
+    if (!node) {
+      return null;
+    }
+
+    const element = node.nodeType === Node.TEXT_NODE ? node.parentElement : node;
+    const cell = element?.closest?.("td, th");
+    if (cell && isTableCellInEditableArea(cell)) {
+      return cell;
+    }
+
+    return null;
+  }
+
+  function getEditorRoot() {
+    return editor?.vditor?.element || document.getElementById("editor");
+  }
+
+  function getEditableAreas() {
+    return [
+      editor?.vditor?.wysiwyg?.element,
+      editor?.vditor?.ir?.element,
+    ].filter(Boolean);
+  }
+
+  function getEditableAreaForNode(node) {
+    const element = node?.nodeType === Node.TEXT_NODE ? node.parentElement : node;
+    if (!element) {
+      return null;
+    }
+
+    return getEditableAreas().find((area) => area.contains(element)) || null;
+  }
+
+  function isTableCellInEditableArea(cell) {
+    return Boolean(getEditableAreaForNode(cell));
+  }
+
+  function rememberTableCell(cell) {
+    lastTableCell = cell;
+    return cell;
+  }
+
+  function isPrimaryShortcut(event) {
+    if (isMacPlatform()) {
+      return event.metaKey && !event.ctrlKey;
+    }
+
+    return event.ctrlKey && !event.metaKey;
+  }
+
+  function isMacPlatform() {
+    return /Mac|iPhone|iPad|iPod/i.test(navigator.platform);
+  }
+
+  function isKey(event, key) {
+    return event.key.toLowerCase() === key || event.code === `Key${key.toUpperCase()}`;
+  }
+
+  function isEqualKey(event) {
+    return event.key === "=" || event.key === "+" || event.code === "Equal";
+  }
+
+  function isMinusKey(event) {
+    return event.key === "-" || event.key === "_" || event.code === "Minus";
+  }
+
+  function focusTableCell(cell) {
+    const selection = window.getSelection();
+    if (!selection) {
+      return;
+    }
+
+    rememberTableCell(cell);
+
+    let targetNode = findTextNode(cell);
+    if (!targetNode) {
+      targetNode = document.createTextNode(" ");
+      cell.appendChild(targetNode);
+    } else if (targetNode.textContent.length === 0) {
+      targetNode.textContent = " ";
+    }
+
+    const range = document.createRange();
+    range.setStart(targetNode, targetNode.textContent.length);
+    range.collapse(true);
+    selection.removeAllRanges();
+    selection.addRange(range);
+  }
+
+  function findTextNode(element) {
+    const walker = document.createTreeWalker(element, NodeFilter.SHOW_TEXT);
+    let node = walker.nextNode();
+
+    while (node) {
+      if (node.textContent.length > 0) {
+        return node;
+      }
+      node = walker.nextNode();
+    }
+
+    return null;
+  }
+
+  function showFallbackTablePopover(cell) {
+    if (!editor?.vditor?.wysiwyg?.popover || !editor?.vditor?.wysiwyg?.element || !cell.isConnected) {
+      return;
+    }
+
+    const popover = editor.vditor.wysiwyg.popover;
+    const hasTableControls = popover.querySelector('[data-type="insertRow"], [data-type="insertRowBelow"], [data-type="insertColumn"], [data-type="insertColumnRight"], [data-type="deleteRow"], [data-type="deleteColumn"]');
+    if (popover.style.display === "block" && hasTableControls) {
+      return;
+    }
+
+    const table = cell.closest("table");
+    if (!table) {
+      return;
+    }
+
+    popover.innerHTML = "";
+    popover.classList.add("mutsumi-table-popover");
+
+    [
+      ["左对齐", "left", "vditor-icon-align-left", () => setTableColumnAlign(cell, "left")],
+      ["居中", "center", "vditor-icon-align-center", () => setTableColumnAlign(cell, "center")],
+      ["右对齐", "right", "vditor-icon-align-right", () => setTableColumnAlign(cell, "right")],
+      ["上方插入行", "insertRowAbove", "vditor-icon-insert-rowb", () => insertTableRow(cell, "above")],
+      ["下方插入行", "insertRowBelow", "vditor-icon-insert-row", () => insertTableRow(cell, "below")],
+      ["左侧插入列", "insertColumnLeft", "vditor-icon-insert-columnb", () => insertTableColumn(cell, "left")],
+      ["右侧插入列", "insertColumnRight", "vditor-icon-insert-column", () => insertTableColumn(cell, "right")],
+      ["删除行", "deleteRow", "vditor-icon-delete-row", () => deleteTableRow(cell)],
+      ["删除列", "deleteColumn", "vditor-icon-delete-column", () => deleteTableColumn(cell)],
+    ].forEach(([label, type, icon, action]) => {
+      popover.appendChild(createTableButton(label, type, icon, action));
+    });
+
+    positionTablePopover(popover, table);
+  }
+
+  function createTableButton(label, type, icon, action) {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "vditor-icon vditor-tooltipped vditor-tooltipped__n";
+    button.dataset.type = type;
+    button.setAttribute("aria-label", label);
+    button.innerHTML = `<svg><use xlink:href="#${icon}"></use></svg>`;
+    button.addEventListener("click", (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      action();
+    });
+    return button;
+  }
+
+  function positionTablePopover(popover, table) {
+    const editorElement = getEditableAreaForNode(table) || editor.vditor.wysiwyg.element;
+    popover.style.left = "0";
+    popover.style.display = "block";
+
+    const top = Math.max(-8, table.offsetTop - 21 - editorElement.scrollTop);
+    const left = Math.min(table.offsetLeft, editorElement.clientWidth - popover.clientWidth);
+
+    popover.style.top = `${top}px`;
+    popover.style.left = `${Math.max(0, left)}px`;
+    popover.setAttribute("data-top", String(table.offsetTop - 21));
+  }
+
+  function insertTableRow(cell, position) {
+    const row = cell.parentElement;
+    const table = cell.closest("table");
+    if (!row || !table) {
+      return;
+    }
+
+    const newRow = document.createElement("tr");
+    const useHeaderCells = row.parentElement?.tagName === "THEAD";
+
+    Array.from(row.cells).forEach((sourceCell) => {
+      const newCell = document.createElement(useHeaderCells ? "th" : "td");
+      copyTableCellMeta(sourceCell, newCell);
+      newCell.textContent = " ";
+      newRow.appendChild(newCell);
+    });
+
+    if (position === "above") {
+      row.insertAdjacentElement("beforebegin", newRow);
+    } else {
+      row.insertAdjacentElement("afterend", newRow);
+    }
+
+    finishTableMutation(newRow.cells[Math.min(cell.cellIndex, newRow.cells.length - 1)]);
+  }
+
+  function insertTableColumn(cell, position) {
+    const table = cell.closest("table");
+    if (!table) {
+      return;
+    }
+
+    const index = cell.cellIndex;
+    Array.from(table.rows).forEach((row) => {
+      const referenceCell = row.cells[Math.min(index, row.cells.length - 1)];
+      const newCell = document.createElement(row.parentElement?.tagName === "THEAD" ? "th" : "td");
+      copyTableCellMeta(referenceCell, newCell);
+      newCell.textContent = " ";
+
+      if (position === "left") {
+        referenceCell.insertAdjacentElement("beforebegin", newCell);
+      } else {
+        referenceCell.insertAdjacentElement("afterend", newCell);
+      }
+    });
+
+    const nextIndex = position === "left" ? index : index + 1;
+    const nextCell = cell.parentElement?.cells[Math.min(nextIndex, cell.parentElement.cells.length - 1)];
+    finishTableMutation(nextCell || cell);
+  }
+
+  function deleteTableRow(cell) {
+    const table = cell.closest("table");
+    const row = cell.parentElement;
+    if (!table || !row) {
+      return;
+    }
+
+    const rowIndex = row.rowIndex;
+    if (table.rows.length <= 1) {
+      table.remove();
+      lastTableCell = null;
+      queueDocumentUpdate();
+      return;
+    }
+
+    table.deleteRow(rowIndex);
+    const nextRow = table.rows[Math.min(rowIndex, table.rows.length - 1)];
+    finishTableMutation(nextRow?.cells[Math.min(cell.cellIndex, nextRow.cells.length - 1)]);
+  }
+
+  function deleteTableColumn(cell) {
+    const table = cell.closest("table");
+    if (!table) {
+      return;
+    }
+
+    const index = cell.cellIndex;
+    if (table.rows[0]?.cells.length <= 1) {
+      table.remove();
+      lastTableCell = null;
+      queueDocumentUpdate();
+      return;
+    }
+
+    Array.from(table.rows).forEach((row) => {
+      row.cells[index]?.remove();
+    });
+
+    const nextCell = table.rows[Math.min(cell.parentElement.rowIndex, table.rows.length - 1)]
+      ?.cells[Math.min(index, table.rows[0].cells.length - 1)];
+    finishTableMutation(nextCell);
+  }
+
+  function setTableColumnAlign(cell, align) {
+    const table = cell.closest("table");
+    if (!table) {
+      return;
+    }
+
+    Array.from(table.rows).forEach((row) => {
+      row.cells[cell.cellIndex]?.setAttribute("align", align);
+    });
+    finishTableMutation(cell);
+  }
+
+  function copyTableCellMeta(sourceCell, targetCell) {
+    const align = sourceCell?.getAttribute("align");
+    if (align) {
+      targetCell.setAttribute("align", align);
+    }
+  }
+
+  function finishTableMutation(cell) {
+    if (cell) {
+      rememberTableCell(cell);
+      focusTableCell(cell);
+      showFallbackTablePopover(cell);
+    }
+    queueDocumentUpdate();
   }
 
   function applyOutlineState(enabled) {
