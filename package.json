@@ -11,9 +11,6 @@
   "categories": [
     "Other"
   ],
-  "activationEvents": [
-    "onCustomEditor:mutsumi.markdownEditor"
-  ],
   "main": "./out/extension.js",
   "contributes": {
     "customEditors": [
