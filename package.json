@@ -2,7 +2,7 @@
   "name": "mutsumi-markdown-editor",
   "displayName": "Mutsumi Markdown Editor",
   "description": "A clean Vditor-based WYSIWYG Markdown editor for VuePress blogs.",
-  "version": "0.0.8",
+  "version": "0.0.9",
   "publisher": "jellyqwq",
   "icon": "resources/icon.png",
   "engines": {
@@ -64,6 +64,18 @@
       {
         "command": "mutsumiMarkdown.table.alignRight",
         "title": "Mutsumi Markdown: Align Table Column Right"
+      },
+      {
+        "command": "mutsumiMarkdown.export.markdown",
+        "title": "Mutsumi Markdown: Export Markdown"
+      },
+      {
+        "command": "mutsumiMarkdown.export.html",
+        "title": "Mutsumi Markdown: Export HTML"
+      },
+      {
+        "command": "mutsumiMarkdown.export.pdf",
+        "title": "Mutsumi Markdown: Export PDF"
       }
     ],
     "keybindings": [
@@ -159,6 +171,22 @@
           "type": "boolean",
           "default": false,
           "description": "Controls whether the outline is open before the editor has remembered a user choice in the current workspace."
+        },
+        "mutsumiMarkdown.codeBlockTheme": {
+          "type": "string",
+          "default": "github",
+          "description": "Code block preview theme used by Vditor and exported HTML/PDF files. Examples: github, github-dark, vs2015, atom-one-dark, base16/solarized-light."
+        },
+        "mutsumiMarkdown.chromiumPath": {
+          "type": "string",
+          "default": "",
+          "description": "Optional Chrome or Chromium executable path used for PDF export. When empty, the editor tries to find Chrome, Chromium, or Microsoft Edge automatically."
+        },
+        "mutsumiMarkdown.pdfMarginTop": {
+          "type": "number",
+          "default": 25,
+          "minimum": 0,
+          "description": "Top margin in millimeters for exported PDF files."
         }
       }
     }
@@ -169,6 +197,7 @@
     "vscode:prepublish": "npm run compile"
   },
   "dependencies": {
+    "puppeteer-core": "^25.0.2",
     "vditor": "^3.11.2"
   },
   "devDependencies": {

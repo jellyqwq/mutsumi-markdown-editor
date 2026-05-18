@@ -12,8 +12,11 @@
   let tableCellClickBound = false;
   let tableHotkeyBound = false;
   let tableSelectionBound = false;
+  let exportMenuBound = false;
+  let codeBlockThemeBound = false;
   let lastTableCell = null;
   const pendingImages = new Map();
+  const pendingExports = new Map();
 
   window.addEventListener("message", (event) => {
     const message = event.data;
@@ -26,6 +29,7 @@
           documentDirUri: trimTrailingSlash(message.documentDirUri || ""),
           imageRoot: message.imageRoot || "/images",
           outlineEnabled: Boolean(message.outlineEnabled),
+          codeBlockTheme: normalizeCodeBlockTheme(message.codeBlockTheme),
         };
         createEditor(message.text || "");
         break;
@@ -49,6 +53,22 @@
 
       case "tableAction":
         runTableAction(message.action);
+        break;
+
+      case "requestExport":
+        exportDocument(message.format);
+        break;
+
+      case "exportFinished":
+        finishExport(message.requestId, message.path);
+        break;
+
+      case "exportFailed":
+        failExport(message.requestId, message.message);
+        break;
+
+      case "setCodeBlockTheme":
+        applyCodeBlockTheme(message.theme);
         break;
     }
   });
@@ -80,6 +100,9 @@
       },
       preview: {
         maxWidth: 960,
+        hljs: {
+          style: normalizeCodeBlockTheme(settings.codeBlockTheme),
+        },
       },
       cache: {
         enable: false,
@@ -102,6 +125,9 @@
         watchTableCellClicks();
         watchTableSelection();
         watchTableHotkeys();
+        watchExportMenu();
+        watchCodeBlockThemeSelection();
+        applyCodeBlockTheme(settings.codeBlockTheme);
         queueImageResolution();
       },
       upload: {
@@ -134,7 +160,7 @@
       return;
     }
 
-    editor.setTheme(getVditorTheme());
+    editor.setTheme(getVditorTheme(), undefined, normalizeCodeBlockTheme(settings.codeBlockTheme));
     window.setTimeout(() => {
       injectThemePatch();
       ensureToolbarIconFallback();
@@ -237,6 +263,140 @@
     apply();
     window.setTimeout(apply, 100);
     window.setTimeout(apply, 500);
+  }
+
+  function watchCodeBlockThemeSelection() {
+    if (codeBlockThemeBound) {
+      return;
+    }
+
+    codeBlockThemeBound = true;
+    document.addEventListener("click", (event) => {
+      const button = event.target?.closest?.(".vditor-hint button");
+      if (!isCodeBlockThemeButton(button)) {
+        return;
+      }
+
+      const theme = normalizeCodeBlockTheme(button.textContent);
+      window.setTimeout(() => {
+        settings.codeBlockTheme = theme;
+        vscode.postMessage({
+          type: "codeBlockTheme",
+          theme,
+        });
+      }, 0);
+    }, true);
+  }
+
+  function isCodeBlockThemeButton(button) {
+    const panel = button?.closest?.(".vditor-hint");
+    if (!panel) {
+      return false;
+    }
+
+    const buttons = Array.from(panel.querySelectorAll("button"));
+    if (buttons.length < 20) {
+      return false;
+    }
+
+    return Boolean(normalizeCodeBlockTheme(button.textContent));
+  }
+
+  function applyCodeBlockTheme(theme) {
+    settings.codeBlockTheme = normalizeCodeBlockTheme(theme);
+    if (editor && typeof editor.setTheme === "function") {
+      editor.setTheme(getVditorTheme(), undefined, settings.codeBlockTheme);
+    }
+  }
+
+  function normalizeCodeBlockTheme(theme) {
+    const value = String(theme || "").trim();
+    return value || "github";
+  }
+
+  function watchExportMenu() {
+    if (exportMenuBound) {
+      return;
+    }
+
+    exportMenuBound = true;
+    ["click", "touchstart"].forEach((eventName) => {
+      document.addEventListener(eventName, (event) => {
+        const button = event.target?.closest?.("button[data-type]");
+        const format = button?.dataset?.type;
+        if (!isExportFormat(format) || !isVditorExportButton(button)) {
+          return;
+        }
+
+        event.preventDefault();
+        event.stopPropagation();
+        event.stopImmediatePropagation();
+        exportDocument(format);
+        hideExportPanels();
+      }, true);
+    });
+  }
+
+  function isExportFormat(value) {
+    return value === "markdown" || value === "html" || value === "pdf";
+  }
+
+  function isVditorExportButton(button) {
+    const panel = button?.closest?.(".vditor-hint");
+    return Boolean(
+      panel &&
+      panel.querySelector('button[data-type="markdown"]') &&
+      panel.querySelector('button[data-type="pdf"]') &&
+      panel.querySelector('button[data-type="html"]'),
+    );
+  }
+
+  function hideExportPanels() {
+    document.querySelectorAll(".vditor-hint").forEach((panel) => {
+      if (
+        panel.querySelector('button[data-type="markdown"]') &&
+        panel.querySelector('button[data-type="pdf"]') &&
+        panel.querySelector('button[data-type="html"]')
+      ) {
+        panel.style.display = "none";
+      }
+    });
+  }
+
+  function exportDocument(format) {
+    if (!editor || !isExportFormat(format)) {
+      return;
+    }
+
+    const requestId = `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+    pendingExports.set(requestId, format);
+    editor.tip?.(`正在导出 ${format.toUpperCase()}...`, 1800);
+    vscode.postMessage({
+      type: "exportDocument",
+      requestId,
+      format,
+      markdown: getMarkdownValue(),
+      html: getExportHtml(),
+    });
+  }
+
+  function getExportHtml() {
+    if (!editor || typeof editor.getHTML !== "function") {
+      return "";
+    }
+
+    return withOriginalImageSources(() => editor.getHTML());
+  }
+
+  function finishExport(requestId, exportedPath) {
+    pendingExports.delete(requestId);
+    editor?.tip?.(`已导出 ${exportedPath}`, 2400);
+  }
+
+  function failExport(requestId, message) {
+    pendingExports.delete(requestId);
+    editor?.tip?.(message || "导出失败", 4000);
+    console.error(message || "Export failed.");
   }
 
   function watchTableCellClicks() {

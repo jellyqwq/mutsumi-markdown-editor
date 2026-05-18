@@ -13,6 +13,7 @@ Mutsumi Markdown Editor 是一个基于 Vditor 的 VS Code Markdown 所见即所
 - 本地预览 `/images/...` 图片时自动映射到 public 目录。
 - 大纲打开或关闭状态会在当前 workspace 中记住。
 - 可以让 Git diff 继续使用 VS Code 普通文本比对。
+- 支持导出 Markdown、HTML 和 PDF 到当前文件所在目录。
 - 跟随 VS Code 明暗主题。
 
 ## 使用
@@ -42,6 +43,46 @@ Open With... -> Mutsumi Markdown Editor
   }
 }
 ```
+
+## 导出
+
+点击 Vditor 工具栏里的导出菜单，或者在命令面板执行：
+
+```text
+Mutsumi Markdown: Export Markdown
+Mutsumi Markdown: Export HTML
+Mutsumi Markdown: Export PDF
+```
+
+导出文件会放到当前 Markdown 文件所在目录：
+
+```text
+article.export.md
+article.html
+article.pdf
+```
+
+PDF 导出会优先自动寻找本机的 Chrome、Chromium 或 Microsoft Edge。如果自动寻找失败，可以配置：
+
+```json
+{
+  "mutsumiMarkdown.chromiumPath": "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
+}
+```
+
+包含 `abc` 代码块的乐谱会在导出的 HTML 和 PDF 中渲染为五线谱。
+
+## 代码块主题
+
+代码块高亮主题可以通过设置持久化：
+
+```json
+{
+  "mutsumiMarkdown.codeBlockTheme": "github-dark"
+}
+```
+
+也可以在编辑器工具栏的“代码块主题预览”里直接选择，插件会把选择写入当前 workspace 设置。导出的 HTML 和 PDF 也会使用这个主题。
 
 ## 图片路径
 
